@@ -21,8 +21,8 @@ class _GameScreenState extends State<GameScreen> {
 
     setState(() {
       player = Offset(
-        (player.dx + details.delta.dx / size.width).clamp(0.07, 0.93),
-        (player.dy + details.delta.dy / size.height).clamp(0.08, 0.92),
+        (player.dx + details.delta.dx / size.width).clamp(0.07, 0.93).toDouble(),
+        (player.dy + details.delta.dy / size.height).clamp(0.08, 0.92).toDouble(),
       );
 
       final distance = math.sqrt(
