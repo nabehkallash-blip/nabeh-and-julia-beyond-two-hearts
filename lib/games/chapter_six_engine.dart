@@ -290,8 +290,8 @@ class ChapterSixFlameGame extends FlameGame {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final w = size.x;
-    final h = size.y;
+    final w = canvasSize.x;
+    final h = canvasSize.y;
     if (w <= 0 || h <= 0) return;
 
     // Dusk sky and distant city silhouettes.
