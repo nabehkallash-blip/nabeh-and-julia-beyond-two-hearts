@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../games/chapter_six_engine.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -512,39 +513,57 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget buildBoss() {
-    final needsDodge=bossTurn.isEven;
     return Column(children:[
-      Container(height:225,width:double.infinity,
-        decoration:BoxDecoration(borderRadius:BorderRadius.circular(23),
-          gradient:const LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
-            colors:[Color(0xFF552E58),Color(0xFF282341),Color(0xFF13172B)])),
-        child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-          const Icon(Icons.auto_awesome,color:AppTheme.gold,size:24),const SizedBox(height:9),
-          const Text('THE DISTANCE',style:TextStyle(color:Colors.white70,letterSpacing:2,fontSize:11)),
-          const SizedBox(height:13),
-          Icon(needsDodge?Icons.flash_on_rounded:Icons.favorite,
-            color:needsDodge?Colors.orangeAccent:AppTheme.pink,size:78),
-          const SizedBox(height:12),
-          Text(needsDodge?'INCOMING ATTACK!':'THE WAY IS OPEN!',
-            style:TextStyle(color:needsDodge?Colors.orangeAccent:AppTheme.gold,fontWeight:FontWeight.w900,fontSize:19,letterSpacing:1)),
-          const SizedBox(height:8),
-          Text(needsDodge?'DODGE NOW':'STRIKE NOW',
-            style:const TextStyle(color:Colors.white70,letterSpacing:2,fontSize:11)),
+      Container(
+        width:double.infinity,
+        padding:const EdgeInsets.all(20),
+        decoration:BoxDecoration(
+          borderRadius:BorderRadius.circular(23),
+          gradient:const LinearGradient(
+            begin:Alignment.topLeft,end:Alignment.bottomRight,
+            colors:[Color(0xFF34485A),Color(0xFF282341),Color(0xFF13172B)],
+          ),
+          border:Border.all(color:AppTheme.gold.withOpacity(.35)),
+        ),
+        child:const Column(children:[
+          Icon(Icons.videogame_asset_rounded,color:AppTheme.gold,size:54),
+          SizedBox(height:12),
+          Text('THE FINAL JOURNEY',style:TextStyle(
+            color:AppTheme.gold,fontWeight:FontWeight.w900,
+            letterSpacing:1.6,fontSize:17)),
+          SizedBox(height:9),
+          Text(
+            'The final chapter now runs on the Flame game engine. '
+            'Enter the action scene, dodge incoming attacks, and fire only '
+            'when the enemy is exposed. Julia stays close behind you.',
+            textAlign:TextAlign.center,
+            style:TextStyle(color:Colors.white70,fontSize:12,height:1.6),
+          ),
         ]),
       ),
-      const SizedBox(height:13),
-      const Text('Nine decisions stand between you and the final reunion. Three mistakes and the challenge is lost.',
-        textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:12,height:1.5)),
       const SizedBox(height:14),
-      Row(children:[
-        Expanded(child:FilledButton.icon(onPressed:won||lost?null:()=>bossAction(true),
-          icon:const Icon(Icons.shield),label:const Text('DODGE'),
-          style:FilledButton.styleFrom(backgroundColor:const Color(0xFF35566A),padding:const EdgeInsets.symmetric(vertical:16)))),
-        const SizedBox(width:10),
-        Expanded(child:FilledButton.icon(onPressed:won||lost?null:()=>bossAction(false),
-          icon:const Icon(Icons.flash_on),label:const Text('STRIKE'),
-          style:FilledButton.styleFrom(backgroundColor:AppTheme.pink,padding:const EdgeInsets.symmetric(vertical:16)))),
-      ]),
+      SizedBox(
+        width:double.infinity,height:52,
+        child:FilledButton.icon(
+          onPressed:won||lost?null:() {
+            Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder:(_)=>const ChapterSixEngineScreen()),
+            ).then((result) {
+              if (result==true && mounted) complete();
+            });
+          },
+          icon:const Icon(Icons.play_arrow_rounded),
+          label:const Text('ENTER THE FINAL CHAPTER'),
+          style:FilledButton.styleFrom(
+            backgroundColor:AppTheme.pink,
+            foregroundColor:Colors.white,
+          ),
+        ),
+      ),
+      const SizedBox(height:8),
+      const Text('Landscape mode • Dodge and fire • Three threats • Final reunion',
+        textAlign:TextAlign.center,
+        style:TextStyle(color:Colors.white54,fontSize:10)),
     ]);
   }
 
