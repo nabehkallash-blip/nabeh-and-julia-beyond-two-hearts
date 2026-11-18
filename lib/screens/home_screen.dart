@@ -4,74 +4,127 @@ import 'game_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body:Container(
-        decoration:const BoxDecoration(gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,
-          colors:[Color(0xFF263E49),AppTheme.background,Color(0xFF17132D)])),
-        child:SafeArea(child:SingleChildScrollView(child:Padding(
-          padding:const EdgeInsets.fromLTRB(22,28,22,26),
-          child:Column(children:[
-            ClipRRect(borderRadius:BorderRadius.circular(25),child:Image.asset('assets/images/together.jpg',
-              height:220,width:double.infinity,fit:BoxFit.cover,
-              errorBuilder:(_,__,___)=>Container(height:220,color:AppTheme.surface,
-                child:const Icon(Icons.favorite,size:60,color:AppTheme.pink)))),
-            const SizedBox(height:20),
-            const Row(mainAxisAlignment:MainAxisAlignment.center,children:[
-              _HomeFace(image:'assets/images/nabeh.jpg',label:'Nabeh'),
-              Padding(padding:EdgeInsets.symmetric(horizontal:15),child:Icon(Icons.favorite,color:AppTheme.pink,size:22)),
-              _HomeFace(image:'assets/images/julia.jpg',label:'Julia'),
-            ]),
-            const SizedBox(height:20),
-            const Text('NABEH & JULIA',textAlign:TextAlign.center,
-              style:TextStyle(fontSize:27,letterSpacing:2.5,fontWeight:FontWeight.w900)),
-            const SizedBox(height:7),
-            const Text('BEYOND TWO HEARTS',style:TextStyle(color:AppTheme.gold,fontSize:11,letterSpacing:3.5,fontWeight:FontWeight.w700)),
-            const SizedBox(height:17),
-            const Text('It began on two university benches.\nTwo shy hearts. One conversation.\nA story that was about to begin.',
-              textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,height:1.6,fontSize:14)),
-            const SizedBox(height:22),
-            const Row(mainAxisAlignment:MainAxisAlignment.center,children:[
-              _ChapterDot(number:'1'),_ChapterDot(number:'2'),_ChapterDot(number:'3'),
-              _ChapterDot(number:'4'),_ChapterDot(number:'★'),
-            ]),
-            const SizedBox(height:8),
-            const Text('5 CHAPTERS • 5 MEETINGS • ONE BIG HUG',textAlign:TextAlign.center,
-              style:TextStyle(color:Colors.white54,fontSize:9,letterSpacing:1.1)),
-            const SizedBox(height:24),
-            SizedBox(width:double.infinity,height:55,child:FilledButton(
-              style:FilledButton.styleFrom(backgroundColor:AppTheme.pink,foregroundColor:const Color(0xFF291326),
-                shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(18))),
-              onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>const GameScreen())),
-              child:const Text('BEGIN WHERE WE BEGAN',style:TextStyle(fontWeight:FontWeight.w900,letterSpacing:1)))),
-            const SizedBox(height:13),
-            const Text('A little world made for two ♥',style:TextStyle(color:Colors.white38,fontSize:12)),
+  Widget build(BuildContext context) => Scaffold(
+    body: Stack(children:[
+      const Positioned.fill(child: DecoratedBox(decoration:BoxDecoration(
+        gradient:LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,
+          colors:[Color(0xFF332044),Color(0xFF100D20),Color(0xFF102B3A)])))),
+      Positioned(top:-90,right:-65,child:_GlowOrb(color:AppTheme.pink.withOpacity(.20),size:240)),
+      Positioned(bottom:80,left:-100,child:_GlowOrb(color:AppTheme.violet.withOpacity(.16),size:260)),
+      SafeArea(child:SingleChildScrollView(
+        padding:const EdgeInsets.fromLTRB(20,16,20,30),
+        child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+          Row(children:[
+            Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),
+              decoration:BoxDecoration(color:Colors.white.withOpacity(.08),borderRadius:BorderRadius.circular(30),
+                border:Border.all(color:Colors.white.withOpacity(.14))),
+              child:const Row(children:[Icon(Icons.auto_awesome,color:AppTheme.gold,size:15),SizedBox(width:7),
+                Text('A STORY MADE FOR TWO',style:TextStyle(fontSize:9,letterSpacing:1.3,fontWeight:FontWeight.w800))])),
+            const Spacer(),const Icon(Icons.favorite,color:AppTheme.pink,size:20),
           ]),
-        ))),
-      ),
-    );
-  }
+          const SizedBox(height:20),
+          Container(height:310,clipBehavior:Clip.antiAlias,
+            decoration:BoxDecoration(borderRadius:BorderRadius.circular(30),
+              border:Border.all(color:Colors.white.withOpacity(.18)),
+              boxShadow:[BoxShadow(color:AppTheme.pink.withOpacity(.13),blurRadius:35)]),
+            child:Stack(fit:StackFit.expand,children:[
+              Image.asset('assets/images/together.jpg',fit:BoxFit.cover,
+                errorBuilder:(_,__,___)=>const DecoratedBox(decoration:BoxDecoration(
+                  gradient:LinearGradient(colors:[Color(0xFF59406D),Color(0xFF203A4C)])),
+                  child:Center(child:Icon(Icons.favorite,color:AppTheme.pink,size:90)))),
+              const DecoratedBox(decoration:BoxDecoration(gradient:LinearGradient(
+                begin:Alignment.topCenter,end:Alignment.bottomCenter,
+                colors:[Colors.transparent,Color(0xEE100D20)],stops:[.25,1]))),
+              const Positioned(top:15,left:15,child:_GlassPill(icon:Icons.auto_awesome,text:'YOUR ADVENTURE BEGINS')),
+              const Positioned(left:20,right:20,bottom:22,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text('NABEH  &  JULIA',style:TextStyle(fontSize:27,letterSpacing:2.2,fontWeight:FontWeight.w900,
+                  shadows:[Shadow(color:Colors.black54,blurRadius:14)])),
+                SizedBox(height:5),Text('BEYOND TWO HEARTS',style:TextStyle(color:AppTheme.gold,fontSize:11,letterSpacing:3.1,fontWeight:FontWeight.w800)),
+                SizedBox(height:9),Text('Two benches. A thousand messages. One story worth every step.',
+                  style:TextStyle(color:Colors.white70,fontSize:12,height:1.4)),
+              ])),
+            ])),
+          const SizedBox(height:18),
+          Row(children:const[
+            Expanded(child:_CharacterTile(image:'assets/images/nabeh.jpg',name:'NABEH',caption:'The explorer',accent:AppTheme.gold)),
+            SizedBox(width:12),
+            Expanded(child:_CharacterTile(image:'assets/images/julia.jpg',name:'JULIA',caption:'The other half',accent:AppTheme.pink)),
+          ]),
+          const SizedBox(height:20),
+          Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
+            color:Colors.white.withOpacity(.055),borderRadius:BorderRadius.circular(22),
+            border:Border.all(color:Colors.white.withOpacity(.10))),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Row(children:[const Expanded(child:Text('THE JOURNEY',style:TextStyle(fontWeight:FontWeight.w900,letterSpacing:1.5,fontSize:11))),
+                Text('6 CHAPTERS',style:TextStyle(color:AppTheme.gold,fontSize:10,fontWeight:FontWeight.w800))]),
+              const SizedBox(height:13),
+              Row(children:List.generate(6,(i)=>Expanded(child:Container(height:7,
+                margin:EdgeInsets.only(right:i==5?0:6),decoration:BoxDecoration(borderRadius:BorderRadius.circular(9),
+                  gradient:LinearGradient(colors:i==0?[AppTheme.pink,AppTheme.gold]:
+                    [Colors.white.withOpacity(.18),Colors.white.withOpacity(.08)])))))),
+              const SizedBox(height:12),
+              const Text('Explore the university, follow the messages, solve the memories, paint your names, and find your way to the final hug.',
+                style:TextStyle(color:Colors.white60,fontSize:12,height:1.55)),
+            ])),
+          const SizedBox(height:20),
+          SizedBox(height:58,child:FilledButton(
+            style:FilledButton.styleFrom(backgroundColor:AppTheme.pink,foregroundColor:const Color(0xFF291326),
+              elevation:8,shadowColor:AppTheme.pink.withOpacity(.35),
+              shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(19))),
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>const GameScreen())),
+            child:const Row(mainAxisAlignment:MainAxisAlignment.center,children:[
+              Icon(Icons.play_arrow_rounded,size:25),SizedBox(width:8),
+              Text('BEGIN WHERE WE BEGAN',style:TextStyle(fontWeight:FontWeight.w900,letterSpacing:1.1)),
+              SizedBox(width:7),Icon(Icons.favorite,size:15),
+            ]))),
+          const SizedBox(height:14),
+          const Center(child:Text('Made of memories. Built for two.  ♥',
+            style:TextStyle(color:Colors.white38,fontSize:11,letterSpacing:.5))),
+        ]),
+      )),
+    ]),
+  );
 }
 
-class _HomeFace extends StatelessWidget {
-  const _HomeFace({required this.image,required this.label});
-  final String image,label;
-  @override
-  Widget build(BuildContext context)=>Column(children:[
-    CircleAvatar(radius:31,backgroundColor:AppTheme.surface,backgroundImage:AssetImage(image)),
-    const SizedBox(height:5),
-    Text(label,style:const TextStyle(color:Colors.white70,fontSize:11)),
-  ]);
-}
-
-class _ChapterDot extends StatelessWidget {
-  const _ChapterDot({required this.number});
-  final String number;
+class _CharacterTile extends StatelessWidget {
+  const _CharacterTile({required this.image,required this.name,required this.caption,required this.accent});
+  final String image,name,caption; final Color accent;
   @override
   Widget build(BuildContext context)=>Container(
-    margin:const EdgeInsets.symmetric(horizontal:5),width:31,height:31,
-    decoration:BoxDecoration(shape:BoxShape.circle,color:AppTheme.surface,border:Border.all(color:AppTheme.pink.withOpacity(.65))),
-    child:Center(child:Text(number,style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold))),
+    padding:const EdgeInsets.symmetric(vertical:13,horizontal:10),
+    decoration:BoxDecoration(color:Colors.white.withOpacity(.055),borderRadius:BorderRadius.circular(20),
+      border:Border.all(color:accent.withOpacity(.25))),
+    child:Row(children:[
+      Container(padding:const EdgeInsets.all(2),decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:accent,width:1.5)),
+        child:CircleAvatar(radius:23,backgroundColor:AppTheme.surface,backgroundImage:AssetImage(image))),
+      const SizedBox(width:9),
+      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(name,style:TextStyle(fontSize:11,fontWeight:FontWeight.w900,color:accent,letterSpacing:1)),
+        const SizedBox(height:3),Text(caption,style:const TextStyle(color:Colors.white54,fontSize:9)),
+      ])),
+    ]),
   );
+}
+
+class _GlassPill extends StatelessWidget {
+  const _GlassPill({required this.icon,required this.text});
+  final IconData icon; final String text;
+  @override
+  Widget build(BuildContext context)=>Container(
+    padding:const EdgeInsets.symmetric(horizontal:11,vertical:8),
+    decoration:BoxDecoration(color:Colors.black.withOpacity(.30),borderRadius:BorderRadius.circular(20),
+      border:Border.all(color:Colors.white24)),
+    child:Row(children:[Icon(icon,color:AppTheme.gold,size:13),const SizedBox(width:6),
+      Text(text,style:const TextStyle(fontSize:8,letterSpacing:1,fontWeight:FontWeight.w800))]),
+  );
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.color,required this.size});
+  final Color color; final double size;
+  @override
+  Widget build(BuildContext context)=>IgnorePointer(child:Container(width:size,height:size,
+    decoration:BoxDecoration(shape:BoxShape.circle,boxShadow:[BoxShadow(color:color,blurRadius:90,spreadRadius:25)])));
 }
