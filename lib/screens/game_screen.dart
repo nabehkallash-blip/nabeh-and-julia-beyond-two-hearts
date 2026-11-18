@@ -236,7 +236,7 @@ class _GameScreenState extends State<GameScreen> {
             Positioned(left:size.width*.12,top:size.height*.49,child:const MapLabel('LIBRARY GARDEN')),
             for(var i=0;i<8;i++)
               Positioned(left:memorySpots[i].dx*size.width-15,top:memorySpots[i].dy*size.height-15,
-                child:AnimatedScale(scale:memories.contains(i)?.2:1,duration:const Duration(milliseconds:180),
+                child:AnimatedScale(scale: memories.contains(i) ? 0.2 : 1,duration:const Duration(milliseconds:180),
                   child:Icon(memories.contains(i)?Icons.check_circle:Icons.auto_awesome,
                     color:memories.contains(i)?AppTheme.gold:AppTheme.pink,size:30))),
             Positioned(left:size.width*.88-30,top:size.height*.15-31,
