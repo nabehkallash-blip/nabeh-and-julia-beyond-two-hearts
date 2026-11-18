@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../music/music_controller.dart';
 import 'game_screen.dart';
@@ -26,7 +27,7 @@ class HomeScreen extends StatelessWidget {
                 Text('A STORY MADE FOR TWO',style:TextStyle(fontSize:9,letterSpacing:1.3,fontWeight:FontWeight.w800))])),
             const Spacer(),
             ValueListenableBuilder<bool>(valueListenable:MusicController.enabled,builder:(context,on,_)=>IconButton(
-              tooltip:on?'Mute music':'Play music',onPressed:MusicController.toggle,
+              tooltip:on?'Mute music':'Play music',onPressed:(){SystemSound.play(SystemSoundType.click);HapticFeedback.selectionClick();MusicController.toggle();},
               icon:Icon(on?Icons.volume_up_rounded:Icons.volume_off_rounded,color:AppTheme.gold,size:21))),
             const Icon(Icons.favorite,color:AppTheme.pink,size:20),
           ]),
@@ -75,7 +76,7 @@ class HomeScreen extends StatelessWidget {
             style:FilledButton.styleFrom(backgroundColor:AppTheme.pink,foregroundColor:const Color(0xFF291326),
               elevation:8,shadowColor:AppTheme.pink.withOpacity(.35),
               shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(19))),
-            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>const GameScreen())),
+            onPressed:(){SystemSound.play(SystemSoundType.click);HapticFeedback.selectionClick();Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>const GameScreen()));},
             child:const Row(mainAxisAlignment:MainAxisAlignment.center,children:[
               Icon(Icons.play_arrow_rounded,size:25),SizedBox(width:8),
               Text('BEGIN WHERE WE BEGAN',style:TextStyle(fontWeight:FontWeight.w900,letterSpacing:1.1)),
