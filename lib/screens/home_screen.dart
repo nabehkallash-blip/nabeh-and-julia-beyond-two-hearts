@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../music/music_controller.dart';
 import 'game_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -23,7 +24,11 @@ class HomeScreen extends StatelessWidget {
                 border:Border.all(color:Colors.white.withOpacity(.14))),
               child:const Row(children:[Icon(Icons.auto_awesome,color:AppTheme.gold,size:15),SizedBox(width:7),
                 Text('A STORY MADE FOR TWO',style:TextStyle(fontSize:9,letterSpacing:1.3,fontWeight:FontWeight.w800))])),
-            const Spacer(),const Icon(Icons.favorite,color:AppTheme.pink,size:20),
+            const Spacer(),
+            ValueListenableBuilder<bool>(valueListenable:MusicController.enabled,builder:(context,on,_)=>IconButton(
+              tooltip:on?'Mute music':'Play music',onPressed:MusicController.toggle,
+              icon:Icon(on?Icons.volume_up_rounded:Icons.volume_off_rounded,color:AppTheme.gold,size:21))),
+            const Icon(Icons.favorite,color:AppTheme.pink,size:20),
           ]),
           const SizedBox(height:20),
           Container(height:280,clipBehavior:Clip.antiAlias,
