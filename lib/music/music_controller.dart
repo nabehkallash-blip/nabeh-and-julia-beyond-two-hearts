@@ -11,7 +11,7 @@ class MusicController {
     _started = true;
     try {
       await _player.setReleaseMode(ReleaseMode.loop);
-      await _player.setVolume(0.28);
+      await _player.setVolume(0.16);
       await _player.play(AssetSource('audio/main_theme.wav'));
     } catch (_) {
       _started = false;
