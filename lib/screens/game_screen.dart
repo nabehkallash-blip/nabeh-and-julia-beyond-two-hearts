@@ -10,17 +10,24 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  static const titles = ['THE FIRST MEETING','ANONYMOUS MESSAGES','SEVEN MONTHS LATER','TWO HEARTS, ONE JOURNEY','BEYOND TWO HEARTS'];
+  static const titles = ['THE FIRST MEETING','ANONYMOUS MESSAGES','SEVEN MONTHS LATER','TWO HEARTS, ONE JOURNEY','PAINT OUR NAMES','BEYOND TWO HEARTS'];
   static const descriptions = [
     'Damascus University. Two different benches, in two different corners of campus. Explore the places between them.',
     'Before you knew each other’s names, little messages crossed the distance. Find every lost fragment.',
     'Seven months of anonymous conversations. Move carefully, avoid the rush, and reveal the truth.',
     'A relationship is built together. Solve the four-switch memory puzzle in the right order.',
-    'The final challenge. Read the danger, dodge at the right moment, and strike when the way is clear.',
+    'The names Nabeh and Julia break into moving letters. Chase every letter and cover it in bright paint to bring color back to the world.',
+    'The final challenge. Read the danger, dodge at the right moment, and strike when the way is clear — then reunite.',
   ];
   int level = 0;
   bool won = false, lost = false;
   Timer? timer;
+  Timer? paintMotionTimer;
+  final math.Random paintRandom = math.Random();
+  final List<Offset> paintLetterPositions = List.generate(10, (i) => Offset(.08 + (i % 5) * .19, .28 + (i ~/ 5) * .38));
+  final Set<int> paintedLetters = {};
+  int paintShots = 0;
+  bool paintWorldColorful = false;
 
   // Level 1: longer free-drag exploration with eight memories.
   static const memorySpots = [
@@ -49,7 +56,7 @@ class _GameScreenState extends State<GameScreen> {
   int bossTurn = 0, bossLives = 3;
 
   @override
-  void dispose() { timer?.cancel(); super.dispose(); }
+  void dispose() { timer?.cancel(); paintMotionTimer?.cancel(); super.dispose(); }
 
   void startTimer() {
     timer?.cancel();
@@ -68,19 +75,23 @@ class _GameScreenState extends State<GameScreen> {
     mazeCell = 0; foundFragments.clear();
     runnerStep = 0; runnerTokens = 0; runnerLives = 3; runnerLane = 1; seconds = 45;
     switchProgress = 0; switchMistakes = 0; bossTurn = 0; bossLives = 3;
+    paintMotionTimer?.cancel(); paintedLetters.clear(); paintShots = 0; paintWorldColorful = false;
+    for (var i=0; i<paintLetterPositions.length; i++) { paintLetterPositions[i] = Offset(.08 + (i % 5) * .19, .28 + (i ~/ 5) * .38); }
   }
 
   void advance() {
-    if (level == 4) { Navigator.pop(context); return; }
+    if (level == 5) { Navigator.pop(context); return; }
     timer?.cancel();
     setState(() { level++; won = false; lost = false; resetLevel(); });
     if (level == 2) startTimer();
+    if (level == 4) startPaintMotion();
   }
 
   void retry() {
     timer?.cancel();
     setState(() { won = false; lost = false; resetLevel(); });
     if (level == 2) startTimer();
+    if (level == 4) startPaintMotion();
   }
 
   void complete() {
@@ -197,6 +208,10 @@ class _GameScreenState extends State<GameScreen> {
       ]);
       case 3: return StatusLine(label:'SWITCHES ACTIVATED',value:'${switchProgress} / 4',
         child:ProgressDots(total:4,done:switchProgress));
+      case 4: return Row(children:[
+        MiniStat(icon:Icons.format_paint,label:'${paintedLetters.length} / 10 letters'),
+        const SizedBox(width:7), MiniStat(icon:Icons.flash_on,label:'$paintShots shots'),
+      ]);
       default: return Row(children:[
         MiniStat(icon:Icons.favorite,label:'${bossLives} hearts'),
         const SizedBox(width:7), MiniStat(icon:Icons.flash_on,label:'${bossTurn} / 9 moves'),
@@ -210,6 +225,7 @@ class _GameScreenState extends State<GameScreen> {
       case 1: return buildMaze();
       case 2: return buildRunner();
       case 3: return buildPuzzle();
+      case 4: return buildPaintLevel();
       default: return buildBoss();
     }
   }
@@ -360,6 +376,105 @@ class _GameScreenState extends State<GameScreen> {
     ]);
   }
 
+
+  void startPaintMotion() {
+    paintMotionTimer?.cancel();
+    paintMotionTimer = Timer.periodic(const Duration(milliseconds: 620), (_) {
+      if (!mounted || level != 4 || won || lost) return;
+      setState(() {
+        for (var i=0; i<paintLetterPositions.length; i++) {
+          if (paintedLetters.contains(i)) continue;
+          final p = paintLetterPositions[i];
+          paintLetterPositions[i] = Offset(
+            (p.dx + (paintRandom.nextDouble() - .5) * .20).clamp(.05, .90).toDouble(),
+            (p.dy + (paintRandom.nextDouble() - .5) * .18).clamp(.20, .78).toDouble(),
+          );
+        }
+      });
+    });
+  }
+
+  void hitPaintLetter(int index) {
+    if (won || lost || paintedLetters.contains(index)) return;
+    setState(() {
+      paintShots++;
+      paintedLetters.add(index);
+      if (paintedLetters.length == 10) {
+        paintWorldColorful = true;
+        won = true;
+        paintMotionTimer?.cancel();
+      }
+    });
+  }
+
+  Widget buildPaintLevel() {
+    const letters = ['N','A','B','E','H','J','U','L','I','A'];
+    return Column(children:[
+      Container(
+        height: 410,
+        width: double.infinity,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: paintWorldColorful
+              ? const [Color(0xFFFF9ACD),Color(0xFF8CE7FF),Color(0xFFFFD98E)]
+              : const [Color(0xFF171B35),Color(0xFF242044),Color(0xFF101A2B)],
+          ),
+          border: Border.all(color: AppTheme.pink.withOpacity(.35)),
+        ),
+        child: LayoutBuilder(builder:(context, constraints) {
+          return Stack(children:[
+            Positioned(top:14,left:14,child:MapLabel(paintWorldColorful?'THE WORLD IS COLORFUL':'THE COLORLESS WORLD')),
+            Positioned(right:14,top:12,child:Text('${paintedLetters.length}/10',
+              style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.w900,fontSize:18))),
+            for (var i=0; i<letters.length; i++)
+              Positioned(
+                left: paintLetterPositions[i].dx * constraints.maxWidth - 22,
+                top: paintLetterPositions[i].dy * constraints.maxHeight - 25,
+                child: GestureDetector(
+                  onTap: () => hitPaintLetter(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds:220),
+                    width:48,height:54,
+                    decoration:BoxDecoration(
+                      color:paintedLetters.contains(i)
+                        ? [const Color(0xFFFF5DA2),const Color(0xFF39C5F0),const Color(0xFFFFC857),const Color(0xFF9C7BFF)][i%4]
+                        : const Color(0xFF35405D),
+                      borderRadius:BorderRadius.circular(15),
+                      border:Border.all(color:paintedLetters.contains(i)?Colors.white:AppTheme.pink,width:2),
+                      boxShadow:[BoxShadow(color:(paintedLetters.contains(i)?AppTheme.gold:AppTheme.pink).withOpacity(.35),blurRadius:14)],
+                    ),
+                    child:Center(child:Text(letters[i],style:TextStyle(
+                      fontSize:25,fontWeight:FontWeight.w900,
+                      color:paintedLetters.contains(i)?Colors.white:Colors.white70,
+                    ))),
+                  ),
+                ),
+              ),
+            if (paintWorldColorful)
+              const Positioned.fill(child:IgnorePointer(child:Center(child:Text('NABEH ♥ JULIA',
+                style:TextStyle(fontSize:30,fontWeight:FontWeight.w900,color:Colors.white,
+                  shadows:[Shadow(color:Colors.pink,blurRadius:18)]))))),
+          ]);
+        }),
+      ),
+      const SizedBox(height:12),
+      Text(paintWorldColorful
+        ? 'Every letter is painted. You brought the colors back together! ♥'
+        : 'The names have shattered into moving letters! Tap each letter to shoot it with paint. Paint all 10 to restore the world.',
+        textAlign:TextAlign.center,
+        style:const TextStyle(color:Colors.white70,fontSize:12,height:1.55)),
+      const SizedBox(height:8),
+      Row(mainAxisAlignment:MainAxisAlignment.center,children:[
+        const Icon(Icons.color_lens,color:AppTheme.pink,size:18),
+        const SizedBox(width:7),
+        Text('PAINT SHOTS: $paintShots',style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold,fontSize:11)),
+      ]),
+    ]);
+  }
+
   Widget buildBoss() {
     final needsDodge=bossTurn.isEven;
     return Column(children:[
@@ -398,7 +513,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget buildResult() {
-    final finalLevel=level==4;
+    final finalLevel=level==5;
     return Container(margin:const EdgeInsets.only(top:16),padding:const EdgeInsets.all(18),width:double.infinity,
       decoration:BoxDecoration(color:AppTheme.surface,borderRadius:BorderRadius.circular(22),
         border:Border.all(color:won?AppTheme.gold:AppTheme.pink)),
