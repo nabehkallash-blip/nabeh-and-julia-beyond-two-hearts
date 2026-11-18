@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class GameScreen extends StatefulWidget {
@@ -58,6 +59,11 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() { timer?.cancel(); paintMotionTimer?.cancel(); super.dispose(); }
 
+  void tapFeedback() {
+    SystemSound.play(SystemSoundType.click);
+    HapticFeedback.selectionClick();
+  }
+
   void startTimer() {
     timer?.cancel();
     seconds = 45;
@@ -80,6 +86,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void advance() {
+    tapFeedback();
     if (level == 5) { Navigator.pop(context); return; }
     timer?.cancel();
     setState(() { level++; won = false; lost = false; resetLevel(); });
@@ -88,6 +95,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void retry() {
+    tapFeedback();
     timer?.cancel();
     setState(() { won = false; lost = false; resetLevel(); });
     if (level == 2) startTimer();
@@ -116,6 +124,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void moveMaze(int dx, int dy) {
     if (won || lost) return;
+    tapFeedback();
     final x = mazeCell % 7, y = mazeCell ~/ 7;
     final nx = x+dx, ny = y+dy;
     if (nx<0 || nx>6 || ny<0 || ny>6) return;
@@ -130,6 +139,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void runnerMove(int lane) {
     if (won || lost || runnerStep>=10) return;
+    tapFeedback();
     setState(() {
       runnerLane = lane;
       if (lane == hazards[runnerStep]) {
@@ -145,6 +155,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void pressSwitch(int symbol) {
     if (won || lost) return;
+    tapFeedback();
     setState(() {
       if (symbol == switchOrder[switchProgress]) {
         switchProgress++;
@@ -159,6 +170,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void bossAction(bool dodge) {
     if (won || lost || bossTurn>=9) return;
+    tapFeedback();
     final needsDodge = bossTurn.isEven;
     setState(() {
       if (dodge != needsDodge) {
@@ -177,20 +189,27 @@ class _GameScreenState extends State<GameScreen> {
         style: const TextStyle(fontSize:9,letterSpacing:.6)),
       centerTitle:true,
     ),
-    body: SafeArea(child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(15,7,15,22),
+    body: SafeArea(child: Padding(
+      padding: const EdgeInsets.fromLTRB(15,7,15,10),
       child: Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
         Row(children:[
           Expanded(child:Text(titles[level],style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w900))),
-          Text('${level+1} / 5',style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold)),
+          Text('${level+1} / 6',style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold)),
         ]),
-        const SizedBox(height:7),
-        Text(descriptions[level],style:const TextStyle(color:Colors.white70,height:1.45,fontSize:13)),
-        const SizedBox(height:13),
+        const SizedBox(height:5),
+        Text(descriptions[level],maxLines:2,overflow:TextOverflow.ellipsis,
+          style:const TextStyle(color:Colors.white70,height:1.3,fontSize:12)),
+        const SizedBox(height:9),
         buildStatus(),
-        const SizedBox(height:12),
-        buildLevel(),
-        if (won || lost) buildResult(),
+        const SizedBox(height:9),
+        Expanded(child: SingleChildScrollView(
+          padding:EdgeInsets.zero,
+          child:buildLevel(),
+        )),
+        if (won || lost) Padding(
+          padding:const EdgeInsets.only(top:8),
+          child:buildResult(),
+        ),
       ]),
     )),
   );
@@ -232,7 +251,7 @@ class _GameScreenState extends State<GameScreen> {
 
   Widget buildUniversity() => Column(children:[
     Container(
-      height:420, width:double.infinity, clipBehavior:Clip.antiAlias,
+      height:300, width:double.infinity, clipBehavior:Clip.antiAlias,
       decoration:BoxDecoration(borderRadius:BorderRadius.circular(23),
         gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,
           colors:[Color(0xFF526B62),Color(0xFF263F49),Color(0xFF172D37)])),
@@ -301,7 +320,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget buildRunner() {
     final step=runnerStep.clamp(0,9);
     return Column(children:[
-      Container(height:270,padding:const EdgeInsets.all(16),
+      Container(height:225,padding:const EdgeInsets.all(12),
         decoration:BoxDecoration(borderRadius:BorderRadius.circular(22),
           gradient:const LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
             colors:[Color(0xFF48304D),Color(0xFF202944),Color(0xFF13182C)])),
@@ -345,7 +364,7 @@ class _GameScreenState extends State<GameScreen> {
     const icons=[Icons.local_florist,Icons.favorite,Icons.nightlight_round,Icons.star];
     const names=['ROSE','HEART','MOON','STAR'];
     return Column(children:[
-      Container(width:double.infinity,padding:const EdgeInsets.all(20),
+      Container(width:double.infinity,padding:const EdgeInsets.all(12),
         decoration:BoxDecoration(borderRadius:BorderRadius.circular(22),
           gradient:const LinearGradient(colors:[Color(0xFF34485A),Color(0xFF332744)])),
         child:const Column(children:[
@@ -394,11 +413,20 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void hitPaintLetter(int index) {
-    if (won || lost || paintedLetters.contains(index)) return;
+  void paintAt(Offset point, Size size) {
+    if (won || lost) return;
+    final p = Offset(point.dx / size.width, point.dy / size.height);
+    var changed = false;
+    for (var i=0; i<paintLetterPositions.length; i++) {
+      if (!paintedLetters.contains(i) && (paintLetterPositions[i]-p).distance < .105) {
+        paintedLetters.add(i);
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    tapFeedback();
     setState(() {
       paintShots++;
-      paintedLetters.add(index);
       if (paintedLetters.length == 10) {
         paintWorldColorful = true;
         won = true;
@@ -411,7 +439,7 @@ class _GameScreenState extends State<GameScreen> {
     const letters = ['N','A','B','E','H','J','U','L','I','A'];
     return Column(children:[
       Container(
-        height: 410,
+        height: 300,
         width: double.infinity,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
@@ -425,52 +453,60 @@ class _GameScreenState extends State<GameScreen> {
           border: Border.all(color: AppTheme.pink.withOpacity(.35)),
         ),
         child: LayoutBuilder(builder:(context, constraints) {
-          return Stack(children:[
-            Positioned(top:14,left:14,child:MapLabel(paintWorldColorful?'THE WORLD IS COLORFUL':'THE COLORLESS WORLD')),
-            Positioned(right:14,top:12,child:Text('${paintedLetters.length}/10',
-              style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.w900,fontSize:18))),
-            for (var i=0; i<letters.length; i++)
-              Positioned(
-                left: paintLetterPositions[i].dx * constraints.maxWidth - 22,
-                top: paintLetterPositions[i].dy * constraints.maxHeight - 25,
-                child: GestureDetector(
-                  onTap: () => hitPaintLetter(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds:220),
-                    width:48,height:54,
+          final size=Size(constraints.maxWidth,constraints.maxHeight);
+          return GestureDetector(
+            behavior:HitTestBehavior.opaque,
+            onPanStart:(d)=>paintAt(d.localPosition,size),
+            onPanUpdate:(d)=>paintAt(d.localPosition,size),
+            child:Stack(children:[
+              Positioned.fill(child:CustomPaint(painter:PaintStarsPainter())),
+              Positioned(top:13,left:13,child:MapLabel(paintWorldColorful?'THE WORLD IS COLORFUL':'THE COLORLESS WORLD')),
+              Positioned(right:14,top:12,child:Text('${paintedLetters.length}/10',
+                style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.w900,fontSize:18))),
+              for (var i=0; i<letters.length; i++)
+                Positioned(
+                  left: paintLetterPositions[i].dx * constraints.maxWidth - 20,
+                  top: paintLetterPositions[i].dy * constraints.maxHeight - 22,
+                  child:AnimatedContainer(
+                    duration:const Duration(milliseconds:220),
+                    width:42,height:46,
                     decoration:BoxDecoration(
                       color:paintedLetters.contains(i)
                         ? [const Color(0xFFFF5DA2),const Color(0xFF39C5F0),const Color(0xFFFFC857),const Color(0xFF9C7BFF)][i%4]
                         : const Color(0xFF35405D),
-                      borderRadius:BorderRadius.circular(15),
+                      borderRadius:BorderRadius.circular(14),
                       border:Border.all(color:paintedLetters.contains(i)?Colors.white:AppTheme.pink,width:2),
-                      boxShadow:[BoxShadow(color:(paintedLetters.contains(i)?AppTheme.gold:AppTheme.pink).withOpacity(.35),blurRadius:14)],
+                      boxShadow:[BoxShadow(color:(paintedLetters.contains(i)?AppTheme.gold:AppTheme.pink).withOpacity(.35),blurRadius:12)],
                     ),
                     child:Center(child:Text(letters[i],style:TextStyle(
-                      fontSize:25,fontWeight:FontWeight.w900,
+                      fontSize:23,fontWeight:FontWeight.w900,
                       color:paintedLetters.contains(i)?Colors.white:Colors.white70,
                     ))),
                   ),
                 ),
-              ),
-            if (paintWorldColorful)
-              const Positioned.fill(child:IgnorePointer(child:Center(child:Text('NABEH ♥ JULIA',
-                style:TextStyle(fontSize:30,fontWeight:FontWeight.w900,color:Colors.white,
-                  shadows:[Shadow(color:Colors.pink,blurRadius:18)]))))),
-          ]);
+              if (paintWorldColorful)
+                const Positioned.fill(child:IgnorePointer(child:Center(child:Text('NABEH  ♥  JULIA',
+                  style:TextStyle(fontSize:27,fontWeight:FontWeight.w900,color:Colors.white,
+                    shadows:[Shadow(color:Colors.pink,blurRadius:18)]))))),
+              if (!paintWorldColorful)
+                const Positioned(left:12,right:12,bottom:12,child:Text('DRAG YOUR FINGER LIKE A PAINTBRUSH',
+                  textAlign:TextAlign.center,style:TextStyle(color:Colors.white60,fontSize:9,letterSpacing:1.2,fontWeight:FontWeight.bold))),
+            ]),
+          );
         }),
       ),
-      const SizedBox(height:12),
+      const SizedBox(height:8),
       Text(paintWorldColorful
         ? 'Every letter is painted. You brought the colors back together! ♥'
-        : 'The names have shattered into moving letters! Tap each letter to shoot it with paint. Paint all 10 to restore the world.',
+        : 'The letters drift around the dark canvas. Sweep your finger over each one to leave a bright paint trail.',
         textAlign:TextAlign.center,
-        style:const TextStyle(color:Colors.white70,fontSize:12,height:1.55)),
-      const SizedBox(height:8),
+        style:const TextStyle(color:Colors.white70,fontSize:11,height:1.4)),
+      const SizedBox(height:6),
       Row(mainAxisAlignment:MainAxisAlignment.center,children:[
-        const Icon(Icons.color_lens,color:AppTheme.pink,size:18),
+        const Icon(Icons.brush_rounded,color:AppTheme.pink,size:17),
         const SizedBox(width:7),
-        Text('PAINT SHOTS: $paintShots',style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold,fontSize:11)),
+        Text('PAINTED: ${paintedLetters.length}/10   •   BRUSH SWIPES: $paintShots',
+          style:const TextStyle(color:AppTheme.gold,fontWeight:FontWeight.bold,fontSize:10)),
       ]),
     ]);
   }
@@ -478,7 +514,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget buildBoss() {
     final needsDodge=bossTurn.isEven;
     return Column(children:[
-      Container(height:285,width:double.infinity,
+      Container(height:225,width:double.infinity,
         decoration:BoxDecoration(borderRadius:BorderRadius.circular(23),
           gradient:const LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,
             colors:[Color(0xFF552E58),Color(0xFF282341),Color(0xFF13172B)])),
@@ -514,29 +550,45 @@ class _GameScreenState extends State<GameScreen> {
 
   Widget buildResult() {
     final finalLevel=level==5;
-    return Container(margin:const EdgeInsets.only(top:16),padding:const EdgeInsets.all(18),width:double.infinity,
-      decoration:BoxDecoration(color:AppTheme.surface,borderRadius:BorderRadius.circular(22),
+    return Container(
+      padding:const EdgeInsets.all(10),width:double.infinity,
+      decoration:BoxDecoration(color:AppTheme.surface,borderRadius:BorderRadius.circular(18),
         border:Border.all(color:won?AppTheme.gold:AppTheme.pink)),
-      child:Column(children:[
+      child:Column(mainAxisSize:MainAxisSize.min,children:[
         if(won&&finalLevel)
-          ClipRRect(borderRadius:BorderRadius.circular(17),
-            child:Image.asset('assets/images/together.jpg',height:180,width:double.infinity,fit:BoxFit.cover))
-        else Icon(won?Icons.favorite:Icons.refresh,color:won?AppTheme.gold:AppTheme.pink,size:48),
-        const SizedBox(height:12),
+          ClipRRect(borderRadius:BorderRadius.circular(12),
+            child:Image.asset('assets/images/together.jpg',height:76,width:double.infinity,fit:BoxFit.cover))
+        else Icon(won?Icons.favorite:Icons.refresh,color:won?AppTheme.gold:AppTheme.pink,size:28),
+        const SizedBox(height:5),
         Text(won?(finalLevel?'BEYOND TWO HEARTS':'CHAPTER COMPLETE!'):'NOT YET, BUT KEEP GOING',
-          textAlign:TextAlign.center,style:const TextStyle(color:AppTheme.gold,fontSize:20,fontWeight:FontWeight.w900)),
-        const SizedBox(height:8),
+          textAlign:TextAlign.center,style:const TextStyle(color:AppTheme.gold,fontSize:16,fontWeight:FontWeight.w900)),
+        const SizedBox(height:3),
         Text(won?(finalLevel
-          ?'After every maze, every challenge, and every distance — you found your way back to each other. The biggest hug is waiting.'
+          ?'After every challenge, you found your way back to each other. The biggest hug is waiting.'
           :'One more part of your story unlocked. Keep moving forward, together.')
           :'Take a breath, try a different route, and give it another go.',
-          textAlign:TextAlign.center,style:const TextStyle(color:Colors.white70,height:1.5,fontSize:13)),
-        const SizedBox(height:15),
-        SizedBox(width:double.infinity,child:FilledButton(onPressed:won?advance:retry,
+          textAlign:TextAlign.center,maxLines:2,overflow:TextOverflow.ellipsis,
+          style:const TextStyle(color:Colors.white70,height:1.25,fontSize:10)),
+        const SizedBox(height:7),
+        SizedBox(width:double.infinity,height:40,child:FilledButton(
+          onPressed:won?advance:retry,
           child:Text(won?(finalLevel?'BACK TO OUR STORY':'NEXT CHAPTER'):'TRY AGAIN'))),
       ]),
     );
   }
+}
+
+class PaintStarsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint=Paint()..color=Colors.white.withOpacity(.16);
+    for(var i=0;i<28;i++) {
+      final x=((i*47)%997)/997*size.width;
+      final y=((i*83)%991)/991*size.height;
+      canvas.drawCircle(Offset(x,y),i%4==0?1.8:1.0,paint);
+    }
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=>false;
 }
 
 class StatusLine extends StatelessWidget {
