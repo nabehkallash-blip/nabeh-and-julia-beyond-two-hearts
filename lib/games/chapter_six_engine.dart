@@ -196,8 +196,8 @@ class ChapterSixFlameGame extends FlameGame {
     super.update(dt);
     worldTime += dt;
     if (finished) return;
-    if (muzzleFlash > 0) muzzleFlash = math.max(0, muzzleFlash - dt * 3.5);
-    if (damageFlash > 0) damageFlash = math.max(0, damageFlash - dt * 2.2);
+    if (muzzleFlash > 0) muzzleFlash = math.max(0.0, muzzleFlash - dt * 3.5);
+    if (damageFlash > 0) damageFlash = math.max(0.0, damageFlash - dt * 2.2);
     if (enemyDefeated) {
       enemyX = math.min(1.08, enemyX + dt * 0.16);
       if (enemyX >= 1.04) _spawnNext();
@@ -436,7 +436,7 @@ class ChapterSixFlameGame extends FlameGame {
   }
 
   void _rect(Canvas canvas, Rect rect, Color color, {double radius = 0}) {
-    final p = _paint..color = color;
+    final p = _paint..color = color..style = PaintingStyle.fill;
     if (radius > 0) {
       canvas.drawRRect(
           RRect.fromRectAndRadius(rect, Radius.circular(radius)), p);
